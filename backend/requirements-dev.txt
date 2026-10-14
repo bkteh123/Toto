@@ -1,0 +1,5 @@
+-r requirements.txt
+pytest>=8
+# Embedded PostgreSQL 16 so the test-suite runs without Docker.
+# Skip it by exporting TEST_DATABASE_URL to point at any PostgreSQL instance.
+pgserver>=0.1.4
