@@ -17,7 +17,9 @@ FROM nginx:1.27-alpine
 RUN apk add --no-cache apache2-utils
 COPY frontend/nginx.railway.conf.template /etc/nginx/templates/default.conf.template
 COPY frontend/railway-htpasswd.sh /docker-entrypoint.d/40-htpasswd.sh
-RUN chmod +x /docker-entrypoint.d/40-htpasswd.sh
+RUN chmod +x /docker-entrypoint.d/40-htpasswd.sh \
+    # "auto" sizes to the (large) host CPU count and starts ~80 workers; two is plenty here.
+    && sed -i 's/^worker_processes.*/worker_processes 2;/' /etc/nginx/nginx.conf
 COPY --from=build /web/dist /usr/share/nginx/html
 # Let the stock entrypoint export NGINX_LOCAL_RESOLVERS (from /etc/resolv.conf) so nginx
 # re-resolves the backend address instead of caching it from startup.
