@@ -1,0 +1,24 @@
+# Railway build: context is the REPO ROOT.
+# Select it on the service with  RAILWAY_DOCKERFILE_PATH=frontend/Dockerfile.railway
+# docker-compose uses frontend/Dockerfile instead and is unaffected.
+#
+# Runtime variables (set on the Railway service):
+#   BASIC_AUTH_USER / BASIC_AUTH_PASSWORD  required - the container refuses to start without them
+#   BACKEND_ORIGIN                         e.g. http://backend.railway.internal:8000
+#   PORT                                   injected by Railway
+FROM node:24-alpine AS build
+WORKDIR /web
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ .
+RUN npm run build
+
+FROM nginx:1.27-alpine
+RUN apk add --no-cache apache2-utils
+COPY frontend/nginx.railway.conf.template /etc/nginx/templates/default.conf.template
+COPY frontend/railway-htpasswd.sh /docker-entrypoint.d/40-htpasswd.sh
+RUN chmod +x /docker-entrypoint.d/40-htpasswd.sh
+COPY --from=build /web/dist /usr/share/nginx/html
+# Let the stock entrypoint export NGINX_LOCAL_RESOLVERS (from /etc/resolv.conf) so nginx
+# re-resolves the backend address instead of caching it from startup.
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1

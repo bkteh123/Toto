@@ -1,0 +1,11 @@
+# Used when the repo root is the build context (Railway). docker-compose builds from
+# backend/ and frontend/ and uses their own .dockerignore files.
+.git
+.env
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.collector_cache
+backend/tests
+*.xlsx
